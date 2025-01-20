@@ -23,15 +23,7 @@ type Item struct {
 	price			string	`json:"price"`
 }
 
-type processor struct {
-	mu sync.Mutex
-	id string 
-}
-
-func (p *processor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-
+func process(w http.ResponseWriter, r *http.Request) {
 	var receipt Receipt
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&receipt)
@@ -40,7 +32,7 @@ func (p *processor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	} 
 
-	p.id = receipt.Retailer + receipt.PurchaseDate + receipt.purchaseTime
+	id := receipt.Retailer + receipt.PurchaseDate + receipt.purchaseTime
 
 	points, err := calculatePoints(&receipt)
 	if err != nil {
@@ -104,5 +96,5 @@ func getPoints(w http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	http.Handle("/receipts/process", new(processor))
+	http.HandleFunc("/receipts/process", process)
 }
