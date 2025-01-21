@@ -9,8 +9,9 @@ As outlined in the go.mod, I used go v1.20 and the gorilla/mux library
 It will run on port 8080
 
 ## Main
-Initialize a map of string to int to keep track of the points for each receipt
-Set up a router for the endpoints
+  
+- Initialize a map of string to int to keep track of the points for each receipt
+- Set up a router for the endpoints
 
 ## Endpoints
 ### POST /receipts/process  
