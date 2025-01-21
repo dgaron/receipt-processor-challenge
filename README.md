@@ -3,7 +3,7 @@
 ## Requirements
 As outlined in the go.mod, I used go v1.20 and the gorilla/mux library
 
-`go mod tidy`
+`go mod tidy`  
 `go run receipt-processor-challenge.go`
 
 ## Main
