@@ -19,7 +19,8 @@ It will run on port 8080
 - Decode the json body into a "Receipt" struct matching the schema in the api.yml  
   - Return "The receipt is invalid." if receipt can't be decoded / doesn't match schema  
 - Create an id by concatenating retailer, date, and time  
-  - Remove non alphanuemeric characters from retailer name so it plays nicely with the url  
+  - Remove non alphanuemeric characters from retailer name so it plays nicely with the url
+  - Regex in the schema looks like it's just hyphens and ampersands so I could have simplified this function using a couple of calls to strings.ReplaceAll()
 - Calculate the points according to the rules  
   - I'm not a large language model  
 - Store the points in the map  
