@@ -12,17 +12,17 @@ Set up a router for the endpoints
 
 ## Endpoints
 ### POST /receipts/process
-Decode the json body into a "Receipt" struct matching the schema in the api.yml
+-Decode the json body into a "Receipt" struct matching the schema in the api.yml
   - Return "The receipt is invalid." if receipt can't be decoded / doesn't match schema
-Create an id by concatenating retailer, date, and time
+-Create an id by concatenating retailer, date, and time
   - Remove non alphanuemeric characters from retailer name so it plays nicely with the url
-Calculate the points according to the rules
+-Calculate the points according to the rules
   - I'm not a large language model
-Store the points in the map
-Return the json {"id": "{id_val}"}
+-Store the points in the map
+-Return the json {"id": "{id_val}"}
 
 ### GET /receipts/{id}/points
-Get the id string from the url parameter
-Check the map
+-Get the id string from the url parameter
+-Check the map
   - Return "No receipt found for that ID." if id not present
-Return the json {"points": "{point_val}"} with the value calculated previously and stored in the map
+-Return the json {"points": "{point_val}"} with the value calculated previously and stored in the map
