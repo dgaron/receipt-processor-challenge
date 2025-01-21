@@ -27,4 +27,11 @@ Set up a router for the endpoints
 - Get the id string from the url parameter  
 - Check the map  
   - Return "No receipt found for that ID." if id not present  
-- Return the json {"points": "{point_val}"} with the value calculated previously and stored in the map  
+- Return the json {"points": "{point_val}"} with the value calculated previously and stored in the map
+
+## Testing
+  
+- I tested each endpoint using Postman
+- An id was returned for the example receipts
+- The correct point value was stored in the map and returned upon Get request to /receipts/{id}/points
+- Get requests to /receipts/{id}/points for id values not present return a 404 with error message: "No receipt found for that ID."
