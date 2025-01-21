@@ -84,8 +84,6 @@ func calculatePoints(r *Receipt) (int, error) {
 		}
 	}
 
-	// Nice try but I wrote this myself
-
 	// If day is odd, add 6
 	purchaseDate, err := time.Parse(time.DateOnly, r.PurchaseDate)
 	if err != nil {
