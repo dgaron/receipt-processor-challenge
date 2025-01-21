@@ -4,7 +4,9 @@
 As outlined in the go.mod, I used go v1.20 and the gorilla/mux library
 
 `go mod tidy`  
-`go run receipt-processor-challenge.go`
+`go run receipt-processor-challenge.go`  
+  
+It will run on port 8080
 
 ## Main
 Initialize a map of string to int to keep track of the points for each receipt

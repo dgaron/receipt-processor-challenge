@@ -5,7 +5,6 @@ import (
 	"errors"
 	"math"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -115,10 +114,14 @@ func countAlphanumeric(s string) int {
 	return count
 }
 
-func removeNonAlphanumeric(input string) string {
-	re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
-	cleaned := re.ReplaceAllString(input, "")
-	return cleaned
+func removeNonAlphanumeric(s string) string {
+	var cleaned strings.Builder
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
+			cleaned.WriteRune(r)
+		}
+	}
+	return cleaned.String()
 }
 
 func getPoints(w http.ResponseWriter, r *http.Request) {
