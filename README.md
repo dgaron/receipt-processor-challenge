@@ -30,7 +30,7 @@ It will run on port 8080
 - Get the id string from the url parameter  
 - Check the map  
   - Return "No receipt found for that ID." if id not present  
-- Return the json {"points": "{point_val}"} with the value calculated previously and stored in the map
+- Return the json {"points": {point_val}} with the value calculated previously and stored in the map
 
 ## Testing
   
