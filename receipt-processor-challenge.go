@@ -36,11 +36,6 @@ func process(w http.ResponseWriter, r *http.Request) {
 
 	id := removeNonAlphanumeric(receipt.Retailer) + receipt.PurchaseDate + receipt.PurchaseTime
 
-	_, present := pointsMap[id]
-	if present {
-		return
-	}
-
 	points, err := calculatePoints(&receipt)
 	if err != nil {
 		http.Error(w, "The receipt is invalid.", http.StatusBadRequest)
@@ -50,6 +45,7 @@ func process(w http.ResponseWriter, r *http.Request) {
 	pointsMap[id] = points
 
 	response := map[string]string{"id": id}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
@@ -136,6 +132,7 @@ func getPoints(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	response := map[string]int{"points": points}
+	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
