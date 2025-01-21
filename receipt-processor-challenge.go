@@ -1,51 +1,59 @@
 package main
 
 import (
-	"fmt"
 	"encoding/json"
-	"net/http"
-	"sync"
-	"unicode"
-	"strconv"
 	"errors"
-	)
+	"math"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
+	"unicode"
+
+	"github.com/gorilla/mux"
+)
+
+var pointsMap map[string]int
 
 type Receipt struct {
-	Retailer		string	`json:"retailer"`
-	PurchaseDate	string	`json:"purchaseDate"`
-	PurchaseTime	string	`json:"purchaseTime"`
-	Items			[]item	`json:"items"`
-	Total			string	`json:"total"`
+	Retailer     string `json:"retailer"`
+	PurchaseDate string `json:"purchaseDate"`
+	PurchaseTime string `json:"purchaseTime"`
+	Items        []Item `json:"items"`
+	Total        string `json:"total"`
 }
 
 type Item struct {
-	Description		string	`json:"shortDescription"`
-	price			string	`json:"price"`
+	Description string `json:"shortDescription"`
+	Price       string `json:"price"`
 }
 
 func process(w http.ResponseWriter, r *http.Request) {
 	var receipt Receipt
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&receipt)
-	if err != nil || r.Method != http.MethodPost {
-		http.Error(w, "The receipt is invalid.", http.StatusBadRequest)
-		return
-	} 
 
-	id := receipt.Retailer + receipt.PurchaseDate + receipt.purchaseTime
+	json.NewDecoder(r.Body).Decode(&receipt)
+
+	id := removeNonAlphanumeric(receipt.Retailer) + receipt.PurchaseDate + receipt.PurchaseTime
+
+	_, present := pointsMap[id]
+	if present {
+		return
+	}
 
 	points, err := calculatePoints(&receipt)
 	if err != nil {
 		http.Error(w, "The receipt is invalid.", http.StatusBadRequest)
 		return
-	} 
+	}
 
-	// Add points to map
+	pointsMap[id] = points
 
-	http.HandleFunc("/receipts/" + p.id + "/points", getPoints)	
+	response := map[string]string{"id": id}
+	json.NewEncoder(w).Encode(response)
 }
 
-func calculatePoints(r *Receipt) (points int, err error) {
+func calculatePoints(r *Receipt) (int, error) {
 	var points int
 
 	// One point for every alphanumeric character in the name
@@ -55,46 +63,89 @@ func calculatePoints(r *Receipt) (points int, err error) {
 	// 25 points if total is a multiple of 0.25
 	total_raw, err := strconv.ParseFloat(r.Total, 64)
 	if err != nil {
-		return 0, errors.New("Error converting total")
+		return 0, errors.New("error converting total")
 	}
 	total := int(total_raw * 100)
-	if total % 100 == 0 {
+	if total%100 == 0 {
 		points += 50
 	}
-	if total % 25 == 0 {
+	if total%25 == 0 {
 		points += 25
 	}
 
 	// 5 points for every 2 items on the receipt
-	points += 5 * (len(r.Items) / 2) 
+	points += 5 * (len(r.Items) / 2)
 
 	// If item desc - whitespace is a multiple of 3, points += ceil(price *.02)
-	
+	for _, item := range r.Items {
+		desc := strings.TrimSpace(item.Description)
+		if len(desc)%3 == 0 {
+			price, err := strconv.ParseFloat(item.Price, 64)
+			if err != nil {
+				return 0, errors.New("error converting price")
+			}
+			points += int(math.Ceil(price * 0.2))
+		}
+	}
 
-	// Nice try
+	// Nice try but I wrote this myself
 
 	// If day is odd, add 6
+	purchaseDate, err := time.Parse(time.DateOnly, r.PurchaseDate)
+	if err != nil {
+		return 0, errors.New("error parsing purchase date")
+	}
+	if purchaseDate.Day()%2 == 1 {
+		points += 6
+	}
 
 	// If time is between 2:00pm and 4:00 pm add 10, assuming strictly between
-	
+	purchaseTime, err := time.Parse("15:04", r.PurchaseTime)
+	if err != nil {
+		return 0, errors.New("error parsing purchase time")
+	}
+	if (purchaseTime.Hour() >= 14 && purchaseTime.Minute() > 0) && purchaseTime.Hour() < 16 {
+		points += 10
+	}
+
+	return points, nil
 }
 
 func countAlphanumeric(s string) int {
 	count := 0
-	for _, r := range s {  
-		if unicode.IsLetter(r) || unicode.IsDigit(r) { 
+	for _, r := range s {
+		if unicode.IsLetter(r) || unicode.IsDigit(r) {
 			count++
 		}
 	}
 	return count
 }
 
-func processTotal(p int) int 
+func removeNonAlphanumeric(input string) string {
+	re := regexp.MustCompile(`[^a-zA-Z0-9]+`)
+	cleaned := re.ReplaceAllString(input, "")
+	return cleaned
+}
 
-func getPoints(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "points: 10\n")
+func getPoints(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+	points, present := pointsMap[id]
+	if !present {
+		http.Error(w, "No receipt found for that ID.", http.StatusNotFound)
+		return
+	}
+	response := map[string]int{"points": points}
+	json.NewEncoder(w).Encode(response)
 }
 
 func main() {
-	http.HandleFunc("/receipts/process", process)
+
+	pointsMap = make(map[string]int)
+
+	router := mux.NewRouter()
+	router.HandleFunc("/receipts/process", process).Methods(http.MethodPost)
+	router.HandleFunc("/receipts/{id}/points", getPoints).Methods(http.MethodGet)
+
+	http.ListenAndServe(":8080", router)
 }
