@@ -17,7 +17,8 @@ It will run on port 8080
 ### POST /receipts/process  
 
 - Decode the json body into a "Receipt" struct matching the schema in the api.yml  
-  - Return "The receipt is invalid." if receipt can't be decoded / doesn't match schema  
+  - Return "The receipt is invalid." if receipt can't be decoded / doesn't match schema
+  - Not performing very rigorous schema checking, just decoding the json, parsing the date, time, and price floats
 - Create an id by concatenating retailer, date, and time  
   - Remove non alphanuemeric characters from retailer name so it plays nicely with the url
   - Regex in the schema looks like it's just hyphens and ampersands so I could have just made a couple of calls to strings.ReplaceAll() instead
